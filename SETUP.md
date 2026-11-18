@@ -2,6 +2,9 @@
 
 キーやトークンは **.env にだけ** 書き、チャットやメールには貼らないでください。
 
+> **PowerShell で `npm` が「スクリプトの実行が無効」と止められるときは**、`npm` の代わりに
+> `npm.cmd` と打ってください（例: `npm.cmd start`、`npm.cmd run auth:gmail`）。セキュリティ設定は変えずに済みます。
+
 ## 0. PCの準備
 
 1. Node.js 22（LTS）以上と Git を入れる（PowerShell で）
