@@ -7,6 +7,7 @@
   "engines": { "node": ">=22.18" },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/cli.ts serve",
+    "auth:gmail": "node --env-file-if-exists=.env src/auth/gmail-auth.ts",
     "yorisoi": "node --env-file-if-exists=.env src/cli.ts",
     "test": "node --test \"test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit"
