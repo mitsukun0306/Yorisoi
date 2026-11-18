@@ -1,0 +1,17 @@
+{
+  "enabled": false,
+  "dryRun": true,
+  "rules": [
+    {
+      "name": "お礼への返事",
+      "platforms": ["instagram"],
+      "contains": ["ありがとう"],
+      "reply": "こちらこそありがとうございます！"
+    },
+    {
+      "name": "家族からの連絡",
+      "from": ["family.bsky.social"],
+      "reply": "見ました！あとで返事しますね。"
+    }
+  ]
+}

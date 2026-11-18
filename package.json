@@ -1,0 +1,19 @@
+{
+  "name": "yorisoi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Yorisoi: 人生をサポートする個人用アプリ（第一弾: SNS返信の集約・通知・返信）",
+  "type": "module",
+  "engines": { "node": ">=22.18" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/cli.ts serve",
+    "auth:gmail": "node --env-file-if-exists=.env src/auth/gmail-auth.ts",
+    "yorisoi": "node --env-file-if-exists=.env src/cli.ts",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "5.9.3"
+  }
+}

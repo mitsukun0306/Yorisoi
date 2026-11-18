@@ -1,0 +1,21 @@
+{
+  "display_information": {
+    "name": "Yorisoi",
+    "description": "自分宛てのメンションとDMを Yorisoi に集めて、そこから返信する個人用アプリ",
+    "background_color": "#c2633f"
+  },
+  "features": {
+    "bot_user": { "display_name": "Yorisoi", "always_online": false }
+  },
+  "oauth_config": {
+    "scopes": {
+      "user": ["search:read", "im:read", "im:history", "users:read", "chat:write"],
+      "bot": ["chat:write"]
+    }
+  },
+  "settings": {
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  }
+}
