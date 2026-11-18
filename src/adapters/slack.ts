@@ -34,6 +34,7 @@ interface HistoryMessage {
   user?: string;
   thread_ts?: string;
   subtype?: string;
+  bot_id?: string;
 }
 
 const tsToIso = (ts: string) => new Date(Number(ts) * 1000).toISOString();
@@ -122,7 +123,8 @@ export class SlackAdapter implements SnsAdapter {
         limit: '5',
       });
       for (const m of h.messages) {
-        if (!m.user || m.user === myId || m.subtype) continue;
+        // ボット（Yorisoi自身の通知を含む）の発言は集めない
+        if (!m.user || m.user === myId || m.subtype || m.bot_id) continue;
         out.push({
           id: `slack:${im.id}:${m.ts}`,
           platform: 'slack',

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LineNotifier } from '../src/notifiers/line.ts';
+import { SlackNotifier } from '../src/notifiers/slack.ts';
 import { WebhookNotifier } from '../src/notifiers/webhook.ts';
 import type { Mention } from '../src/core/types.ts';
 import { fakeFetch } from './helpers.ts';
@@ -15,20 +15,28 @@ const m: Mention = {
   replyRef: {},
 };
 
-test('LINE: 自分宛てに1通にまとめてプッシュする', async () => {
-  const { fetch, calls } = fakeFetch({ '/v2/bot/message/push': {} });
-  await new LineNotifier({ channelAccessToken: 'tok', toUserId: 'U123', apiBase: 'https://line.test' }, fetch).notify([m, m]);
+test('Slack通知: アプリから自分にDMを1通にまとめて送る', async () => {
+  const { fetch, calls } = fakeFetch({ 'chat.postMessage': { ok: true } });
+  await new SlackNotifier({ botToken: 'xoxb-t', userId: 'UME', apiBase: 'https://slack.test/api' }, fetch).notify([m, m]);
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].headers.Authorization, 'Bearer tok');
+  assert.equal(calls[0].headers.Authorization, 'Bearer xoxb-t');
   const body = JSON.parse(calls[0].body!);
-  assert.equal(body.to, 'U123');
-  assert.match(body.messages[0].text, /2 件/);
-  assert.match(body.messages[0].text, /山田 太郎/);
+  assert.equal(body.channel, 'UME');
+  assert.match(body.text, /2 件/);
+  assert.match(body.text, /山田 太郎/);
+});
+
+test('Slack通知: ok:false は失敗にする', async () => {
+  const { fetch } = fakeFetch({ 'chat.postMessage': { ok: false, error: 'not_authed' } });
+  await assert.rejects(
+    new SlackNotifier({ botToken: 'x', userId: 'U', apiBase: 'https://slack.test/api' }, fetch).notify([m]),
+    /not_authed/,
+  );
 });
 
 test('通知: 0件のときは何も送らない', async () => {
   const { fetch, calls } = fakeFetch({});
-  await new LineNotifier({ channelAccessToken: 't', toUserId: 'U' }, fetch).notify([]);
+  await new SlackNotifier({ botToken: 't', userId: 'U' }, fetch).notify([]);
   await new WebhookNotifier({ url: 'https://hook.test', format: 'discord' }, fetch).notify([]);
   assert.equal(calls.length, 0);
 });

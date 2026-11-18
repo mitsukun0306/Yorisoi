@@ -6,7 +6,7 @@ import { MockAdapter } from './adapters/mock.ts';
 import { DEFAULT_AUTO_REPLY, validateRules, type AutoReplyConfig } from './core/rules.ts';
 import type { Notifier, SnsAdapter } from './core/types.ts';
 import { ConsoleNotifier } from './notifiers/console.ts';
-import { LineNotifier } from './notifiers/line.ts';
+import { SlackNotifier } from './notifiers/slack.ts';
 import { WebhookNotifier, type WebhookFormat } from './notifiers/webhook.ts';
 
 type Env = Record<string, string | undefined>;
@@ -44,8 +44,8 @@ export function buildAdapters(env: Env): SnsAdapter[] {
 
 export function buildNotifiers(env: Env): Notifier[] {
   const notifiers: Notifier[] = [new ConsoleNotifier()];
-  if (env.LINE_CHANNEL_ACCESS_TOKEN && env.LINE_TO_USER_ID) {
-    notifiers.push(new LineNotifier({ channelAccessToken: env.LINE_CHANNEL_ACCESS_TOKEN, toUserId: env.LINE_TO_USER_ID }));
+  if (env.SLACK_BOT_TOKEN && env.SLACK_NOTIFY_USER_ID) {
+    notifiers.push(new SlackNotifier({ botToken: env.SLACK_BOT_TOKEN, userId: env.SLACK_NOTIFY_USER_ID }));
   }
   if (env.NOTIFY_WEBHOOK_URL) {
     const format = (env.NOTIFY_WEBHOOK_FORMAT || 'json') as WebhookFormat;

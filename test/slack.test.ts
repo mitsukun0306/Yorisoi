@@ -27,6 +27,7 @@ const routes = {
     messages: [
       { ts: '1763434900.000200', text: '今日ランチ行ける？', user: 'UB' },
       { ts: '1763434950.000300', text: 'いいよ', user: 'UME' },
+      { ts: '1763434960.000400', text: '🔔 通知', user: 'UBOT', bot_id: 'B1' },
     ],
   },
   'users.info': { ok: true, user: { name: 'bob', profile: { display_name: 'ボブ' } } },
