@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { GmailAdapter } from './adapters/gmail.ts';
 import { InstagramAdapter } from './adapters/instagram.ts';
 import { SlackAdapter } from './adapters/slack.ts';
-import { MockAdapter } from './adapters/mock.ts';
+import { demoAdapters } from './adapters/mock.ts';
 import { DEFAULT_AUTO_REPLY, validateRules, type AutoReplyConfig } from './core/rules.ts';
 import type { Notifier, SnsAdapter } from './core/types.ts';
 import { ConsoleNotifier } from './notifiers/console.ts';
@@ -38,7 +38,7 @@ export function buildAdapters(env: Env): SnsAdapter[] {
   if (env.SLACK_USER_TOKEN) {
     adapters.push(new SlackAdapter({ userToken: env.SLACK_USER_TOKEN, dmLimit: Number(env.SLACK_DM_LIMIT || 20) }));
   }
-  if (env.YORISOI_MOCK === '1') adapters.push(new MockAdapter());
+  if (env.YORISOI_MOCK === '1') adapters.push(...demoAdapters());
   return adapters;
 }
 

@@ -4,8 +4,28 @@
 
 ## 第一弾: メッセージの集約・通知・返信
 
-Instagram・Gmail・Slack に届いた「自分宛ての返信・メッセージ」を1か所に集め、Slack などに通知し、
-自分が指示したときだけ返信します。
+Instagram・Gmail・Slack に届いた「自分宛ての返信・メッセージ」を Yorisoi アプリの受信箱に集め、
+新着を通知し、アプリから返信します。返信は自分が指示したときだけ送られます。
+
+## アプリ（Webアプリ・スマホ対応）
+
+```sh
+npm install
+cp .env.example .env   # 使うサービスのキーだけ入れる
+npm start              # http://localhost:3000 を開く
+```
+
+- 受信箱に全サービスの未返信がまとまり、サービスごとに絞り込めます。
+- 各メッセージの下の欄から、そのまま元のサービスに返信できます（Ctrl/⌘+Enter でも送信）。「対応不要」で一覧から外せます。
+- 起動中は5分ごと（`--interval` 秒で変更可）に新着を確認し、画面に即時反映します。「通知をオン」にすると、ブラウザの通知でも知らせます。
+- スマホでは、ブラウザの「ホーム画面に追加」でアプリのように使えます。
+- APIキー無しで画面を試すには `.env` に `YORISOI_MOCK=1` を入れます（サンプルが表示され、返信は実際には送られません）。
+
+### スマホから使うとき
+
+初期状態では、起動したPC（`127.0.0.1`）からしか開けません。スマホから開くには、`.env` に合言葉
+`YORISOI_ACCESS_TOKEN` を設定し、`npm start -- --host 0.0.0.0` で起動します（合言葉が無いと起動しません）。
+外出先から使う場合は、Tailscale などの自分専用ネットワーク経由にするのがおすすめです。
 
 | サービス | 集めるもの | 返信 | 使う公式API |
 | --- | --- | --- | --- |
@@ -20,28 +40,24 @@ Instagram・Gmail・Slack に届いた「自分宛ての返信・メッセージ
 - Instagram の DM は、相手の最後のメッセージから 24 時間以内しか返信できません。
 - Instagram のアクセストークンは約60日で期限が切れるので、更新が必要です。
 
-## 通知
+## ほかの通知先（任意）
 
-新着は必ずターミナルに表示され、設定すれば次にも届きます。
+通知はアプリに集まります。必要なら次にも同時に届けられます。
 
 - **Slack**：自作の Slack アプリから自分にDMが届きます（`SLACK_BOT_TOKEN` と `SLACK_NOTIFY_USER_ID`）。
 - **Webhook**：Discord / Slack / ntfy などに送れます（`NOTIFY_WEBHOOK_URL` と `NOTIFY_WEBHOOK_FORMAT`）。
 
-## 使い方
+## コマンドで使う場合
 
 Node.js 22.18 以上が必要です（TypeScriptをそのまま実行します）。
 
 ```sh
-npm install
-cp .env.example .env              # 使うサービスのキーだけ入れる（空のサービスは無視される）
 npm run yorisoi -- sync           # 新しいものを集めて通知
 npm run yorisoi -- list           # 未返信の一覧
 npm run yorisoi -- reply <ID> 返信文   # 返信する（IDは前方一致でOK）
 npm run yorisoi -- ignore <ID>    # 対応不要にする
 npm run yorisoi -- watch --interval 300   # 5分ごとに sync をくり返す
 ```
-
-APIキー無しで動きを試すには `.env` に `YORISOI_MOCK=1` を入れます。
 
 集めたものは `data/mentions.json` に保存されます（Gitには含まれません）。
 
@@ -59,7 +75,9 @@ APIキー無しで動きを試すには `.env` に `YORISOI_MOCK=1` を入れま
 
 ```
 src/
-  cli.ts              コマンド
+  cli.ts              コマンド（npm start はここの serve）
+  server.ts           アプリのサーバー（画面とAPI）
+  bootstrap.ts        .env から本体を組み立てる
   config.ts           .env から使うサービスと通知先を組み立てる
   core/
     yorisoi.ts        集約 → 保存 → 通知 → 自動返信 の本体
@@ -67,7 +85,8 @@ src/
     rules.ts          自動返信ルール
     types.ts          共通の型（SnsAdapter / Notifier）
   adapters/           サービスごとの取得と返信（instagram / gmail / slack / mock）
-  notifiers/          通知先（console / slack / webhook）
+  notifiers/          通知先（in-app / console / slack / webhook）
+public/               アプリの画面（HTML/CSS/JS、外部ライブラリなし）
 test/                 node:test によるテスト（APIは偽のfetchで置き換え）
 ```
 

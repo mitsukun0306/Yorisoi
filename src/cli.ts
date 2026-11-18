@@ -1,13 +1,16 @@
 import { parseArgs } from 'node:util';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { buildAdapters, buildNotifiers, loadAutoReply } from './config.ts';
+import { fileURLToPath } from 'node:url';
+import { bootstrap } from './bootstrap.ts';
 import { formatMention } from './core/format.ts';
-import { MentionStore } from './core/store.ts';
-import { Yorisoi, type SyncResult } from './core/yorisoi.ts';
+import type { SyncResult } from './core/yorisoi.ts';
+import { InAppNotifier } from './notifiers/in-app.ts';
+import { createAppServer } from './server.ts';
 
 const HELP = `Yorisoi — SNSの返信・メンションをまとめて通知し、指示どおりに返信します
 
 使い方:
+  npm start                               Yorisoiアプリを起動する（http://localhost:3000）
   npm run yorisoi -- sync                 各SNSから新しい返信を集めて通知する
   npm run yorisoi -- watch [--interval 300]  sync を一定間隔（秒）でくり返す
   npm run yorisoi -- list [--all]         未返信の一覧（--all で全部）
@@ -24,6 +27,8 @@ async function main(argv: string[]): Promise<number> {
     options: {
       all: { type: 'boolean', default: false },
       interval: { type: 'string', default: '300' },
+      port: { type: 'string', default: '3000' },
+      host: { type: 'string', default: '127.0.0.1' },
       help: { type: 'boolean', short: 'h', default: false },
     },
   });
@@ -34,16 +39,34 @@ async function main(argv: string[]): Promise<number> {
   }
 
   const env = process.env;
-  const store = new MentionStore(env.YORISOI_DATA_FILE || 'data/mentions.json');
-  await store.load();
-  const app = new Yorisoi({
-    adapters: buildAdapters(env),
-    notifiers: buildNotifiers(env),
-    store,
-    autoReply: await loadAutoReply(env.YORISOI_AUTO_REPLY_FILE || 'auto-reply.json'),
-  });
+  const inApp = new InAppNotifier();
+  const { app, store, adapters } = await bootstrap(env, command === 'serve' ? [inApp] : []);
 
   switch (command) {
+    case 'serve': {
+      const seconds = Number(values.interval);
+      if (!Number.isFinite(seconds) || seconds < 60) throw new Error('--interval は60秒以上にしてください');
+      if (values.host !== '127.0.0.1' && values.host !== 'localhost' && !env.YORISOI_ACCESS_TOKEN) {
+        throw new Error('ほかの端末から開けるようにするときは、.env に YORISOI_ACCESS_TOKEN（合言葉）を設定してください');
+      }
+      const server = createAppServer({
+        app,
+        store,
+        inApp,
+        accessToken: env.YORISOI_ACCESS_TOKEN || undefined,
+        platforms: adapters.map((a) => a.platform),
+        publicDir: fileURLToPath(new URL('../public/', import.meta.url)),
+      });
+      const port = Number(values.port);
+      server.listen(port, values.host, () => console.error(`Yorisoi を開きました: http://${values.host}:${port}`));
+      if (adapters.length === 0) console.error('⚠️ 有効なサービスがありません。.env を設定してください（試すだけなら YORISOI_MOCK=1）');
+      // 起動直後と、その後は一定間隔で新着を確認する
+      for (;;) {
+        report(await app.sync());
+        await sleep(seconds * 1000);
+      }
+    }
+
     case 'sync':
       return report(await app.sync());
 

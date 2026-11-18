@@ -6,6 +6,7 @@
   "type": "module",
   "engines": { "node": ">=22.18" },
   "scripts": {
+    "start": "node --env-file-if-exists=.env src/cli.ts serve",
     "yorisoi": "node --env-file-if-exists=.env src/cli.ts",
     "test": "node --test \"test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit"
